@@ -15,6 +15,7 @@
       <artifactId>jersey-server</artifactId>
       <version>3.1.5</version>
     </dependency>
+
     <!-- Jersey servlet integration -->
     <dependency>
       <groupId>org.glassfish.jersey.containers</groupId>
@@ -29,6 +30,13 @@
       <version>3.1.5</version>
     </dependency>
 
+    <!-- Jersey InjectionManager implementation -->
+    <dependency>
+      <groupId>org.glassfish.jersey.inject</groupId>
+      <artifactId>jersey-hk2</artifactId>
+      <version>3.1.1</version>
+    </dependency>
+
     <!-- Hibernate JPA implementation -->
     <dependency>
       <groupId>org.hibernate.orm</groupId>
@@ -40,6 +48,13 @@
     <dependency>
       <groupId>jakarta.persistence</groupId>
       <artifactId>jakarta.persistence-api</artifactId>
+      <version>3.1.0</version>
+    </dependency>
+
+    <!-- Jakarta RESTful Web Services API -->
+    <dependency>
+      <groupId>jakarta.ws.rs</groupId>
+      <artifactId>jakarta.ws.rs-api</artifactId>
       <version>3.1.0</version>
     </dependency>
 
@@ -63,7 +78,6 @@
       <artifactId>jackson-datatype-jsr310</artifactId>
       <version>2.17.0</version>
     </dependency>
-
 
 
   </dependencies>
