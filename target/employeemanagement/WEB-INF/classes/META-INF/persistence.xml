@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="3.0">
+  <persistence-unit name="EmployeeService" transaction-type="RESOURCE_LOCAL">
+    <description>
+      This unit does CRUD operations to a database. It does not rely
+      on any vendor-specific features and can therefore be deployed
+      to any persistence provider.
+    </description>
+
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+    <!--classes-->
+    <class>digicorp.entity.Employee</class>
+    <class>digicorp.entity.Department</class>
+    <class>digicorp.entity.DeptEmployee</class>
+    <class>digicorp.entity.DeptEmployeeId</class>
+    <class>digicorp.entity.DeptManager</class>
+    <class>digicorp.entity.DeptManagerId</class>
+    <class>digicorp.entity.SalaryHistory</class>
+    <class>digicorp.entity.SalaryHistoryId</class>
+    <class>digicorp.entity.TitleHistory</class>
+    <class>digicorp.entity.TitleHistoryId</class>
+
+    <properties>
+      <!-- JDBC settings -->
+      <property name="jakarta.persistence.jdbc.driver" value="org.mariadb.jdbc.Driver"/>
+      <property name="jakarta.persistence.jdbc.url" value="jdbc:mariadb://localhost:3306/digicorpdb"/>
+      <property name="jakarta.persistence.jdbc.user" value="root"/>
+      <property name="jakarta.persistence.jdbc.password" value=""/>
+
+      <!-- Hibernate -->
+      <property name="hibernate.show_sql" value="true"/>
+      <property name="hibernate.format_sql" value="true"/>
+
+
+    </properties>
+
+
+  </persistence-unit>
+</persistence>

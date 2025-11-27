@@ -1,95 +1,88 @@
 package digicorp.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Employee entity - contains stable employee info and one-to-many relations
+ * to history tables that record changes over time (salary, title, dept membership, manager).
+ */
 @Entity
 @Table(name = "employees")
 public class Employee {
 
     @Id
+    @Column(name = "emp_no")
     private int empNo;
-    private Date birthDate;
+
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
+
+    @Column(name = "first_name")
     private String firstName;
+
+    @Column(name = "last_name")
     private String lastName;
+
     private String gender;
-    private Date hireDate;
 
-    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
-    private List<Department> department;
+    @Column(name = "hire_date")
+    private LocalDate hireDate;
 
-    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
-    private List<PositionHistory> positionHistory;
+    // Dept membership history (dept_emp)
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference // prevents infinite recursion when serializing
+    private List<DeptEmployee> departments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
-    private List<ManagerHistory> manager;
+    // Manager history (dept_manager)
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DeptManager> managerHistory = new ArrayList<>();
 
-    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
-    private List<SalaryHistory> salaryHistory;
+    // Salary history (salaries)
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SalaryHistory> salaryHistory = new ArrayList<>();
 
-//    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
-//    private List<titleHistory> titleHistory;
+    // Title / position history (titles)
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TitleHistory> titleHistory = new ArrayList<>();
 
-    // getters + setters
     public Employee() {}
-    public Employee(int id) {
-        this.empNo = id;
-    }
 
-    public int getEmpNo() {
-        return empNo;
-    }
-    public void setEmpNo(int empNo) {
+    public Employee(int empNo) {
         this.empNo = empNo;
     }
 
-    public Date getBirthDate() {
-        return birthDate;
-    }
+    // getters + setters
+    public int getEmpNo() { return empNo; }
+    public void setEmpNo(int empNo) { this.empNo = empNo; }
 
-    public void setBirthDate(Date birthDate) {
-        this.birthDate = birthDate;
-    }
+    public LocalDate getBirthDate() { return birthDate; }
+    public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
 
-    public String getFirstName() {
-        return firstName;
-    }
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
 
-    public String getLastName() {
-        return lastName;
-    }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
+    public LocalDate getHireDate() { return hireDate; }
+    public void setHireDate(LocalDate hireDate) { this.hireDate = hireDate; }
 
-    public String getGender() {
-        return gender;
-    }
+    public List<DeptEmployee> getDepartments() { return departments; }
+    public void setDepartments(List<DeptEmployee> departments) { this.departments = departments; }
 
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
+    public List<DeptManager> getManagerHistory() { return managerHistory; }
+    public void setManagerHistory(List<DeptManager> managerHistory) { this.managerHistory = managerHistory; }
 
-    public Date getHireDate() {
-        return hireDate;
-    }
+    public List<SalaryHistory> getSalaryHistory() { return salaryHistory; }
+    public void setSalaryHistory(List<SalaryHistory> salaryHistory) { this.salaryHistory = salaryHistory; }
 
-    public void setHireDate(Date hireDate) {
-        this.hireDate = hireDate;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("emp_no: %s, birthdate: %s, firstname: %s, " +
-                        "lastname: %s, gender: %s, hiredate: %.2f",
-                this.empNo, this.birthDate, this.firstName,
-                this.lastName, this.gender, this.hireDate);
-    }
-
+    public List<TitleHistory> getTitleHistory() { return titleHistory; }
+    public void setTitleHistory(List<TitleHistory> titleHistory) { this.titleHistory = titleHistory; }
 }

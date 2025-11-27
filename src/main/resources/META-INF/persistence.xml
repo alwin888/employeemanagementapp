@@ -13,13 +13,16 @@
     <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
     <!--classes-->
-
     <class>digicorp.entity.Employee</class>
     <class>digicorp.entity.Department</class>
-    <class>digicorp.entity.ManagerHistory</class>
-    <class>digicorp.entity.PositionHistory</class>
+    <class>digicorp.entity.DeptEmployee</class>
+    <class>digicorp.entity.DeptEmployeeId</class>
+    <class>digicorp.entity.DeptManager</class>
+    <class>digicorp.entity.DeptManagerId</class>
     <class>digicorp.entity.SalaryHistory</class>
-
+    <class>digicorp.entity.SalaryHistoryId</class>
+    <class>digicorp.entity.TitleHistory</class>
+    <class>digicorp.entity.TitleHistoryId</class>
 
     <properties>
       <!-- JDBC settings -->
@@ -32,8 +35,7 @@
       <property name="hibernate.show_sql" value="true"/>
       <property name="hibernate.format_sql" value="true"/>
 
-      <!-- Optional: auto create/update tables during development -->
-      <property name="hibernate.hbm2ddl.auto" value="update"/>
+
     </properties>
 
 
