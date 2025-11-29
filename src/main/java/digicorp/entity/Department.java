@@ -1,9 +1,8 @@
 package digicorp.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.*;
-import java.util.ArrayList;
 import java.util.List;
+import jakarta.persistence.*;
 
 /**
  * Department entity.
@@ -19,9 +18,9 @@ public class Department {
     @Column(name = "dept_name")
     private String deptName;
 
-//    @OneToMany(mappedBy = "department")
-//    @JsonBackReference // symmetric with Employee's @JsonManagedReference
-//    private List<DeptEmployee> employees = new ArrayList<>();
+    @OneToMany(mappedBy = "department")
+    @JsonBackReference
+    private List<DeptEmployee> employees;
 
     public Department() {}
 
@@ -31,8 +30,8 @@ public class Department {
     public String getDeptName() { return deptName; }
     public void setDeptName(String deptName) { this.deptName = deptName; }
 
-//    public List<DeptEmployee> getEmployees() { return employees; }
-//    public void setEmployees(List<DeptEmployee> employees) { this.employees = employees; }
+    public List<DeptEmployee> getEmployees() { return employees; }
+    public void setEmployees(List<DeptEmployee> employees) { this.employees = employees; }
     @Override
     public String toString() {
         return "Department{" +

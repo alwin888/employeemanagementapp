@@ -1,8 +1,6 @@
 package digicorp.services;
 
 import digicorp.entity.Department;
-import digicorp.entity.DeptEmployee;
-import digicorp.entity.Employee;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import java.util.List;

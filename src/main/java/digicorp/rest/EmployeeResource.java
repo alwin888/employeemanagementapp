@@ -71,6 +71,16 @@ public class EmployeeResource {
         }
     }
 
+
+
+    //Json format to paste in raw in Postman:
+
+//    {
+//        "empNo": 10002,
+//            "newTitle": "Staff promoted",
+//            "fromDate": "2025-12-01"
+//    }
+
     @POST
     @Path("/promote")
     public Response promoteEmployee(PromotionRequestDTO request) {
