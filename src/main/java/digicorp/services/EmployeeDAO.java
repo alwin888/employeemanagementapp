@@ -1,5 +1,6 @@
 package digicorp.services;
 
+import digicorp.dto.EmployeeRecordDTO;
 import digicorp.entity.Employee;
 import digicorp.entity.DeptEmployee;
 import jakarta.persistence.EntityManager;
@@ -32,21 +33,28 @@ public class EmployeeDAO {
         return e;
     }
 
-    // Paged list of employees in a department: returns only required fields via projection
-//    public List<Object[]> findByDepartmentPaged(String deptNo, int offset, int pageSize) {
-//        EntityManager em = JpaUtil.getEntityManager();
-//        try {
-//            TypedQuery<Object[]> q = em.createQuery(
-//                    "SELECT e.empNo, e.firstName, e.lastName, e.hireDate " +
-//                            "FROM DeptEmployee de JOIN de.employee e " +
-//                            "WHERE de.department.deptNo = :deptNo ORDER BY e.empNo", Object[].class);
-//            q.setParameter("deptNo", deptNo);
-//            q.setFirstResult(offset);
-//            q.setMaxResults(pageSize);
-//            return q.getResultList();
-//        } finally {
-//            em.close();
-//        }
-//    }
+    public List<EmployeeRecordDTO> findByDepartment(String deptNo, int page) {
+        int pageSize = 20;
+        int offset = (page - 1) * pageSize;
+
+        String jpql =
+                "SELECT new digicorp.dto.EmployeeRecordDTO(" +
+                        "   e.empNo, e.firstName, e.lastName, e.hireDate" +
+                        ") " +
+                        "FROM DeptEmployee de " +
+                        "JOIN de.employee e " +
+                        "WHERE de.id.deptNo = :deptNo " +
+                        "ORDER BY e.empNo ASC";
+
+        TypedQuery<EmployeeRecordDTO> query = em.createQuery(jpql, EmployeeRecordDTO.class);
+        query.setParameter("deptNo", deptNo);
+        query.setFirstResult(offset);
+        query.setMaxResults(pageSize);
+
+        return query.getResultList();
+    }
+
+
+
 
 }

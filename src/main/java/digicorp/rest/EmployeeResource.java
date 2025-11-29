@@ -1,5 +1,6 @@
 package digicorp.rest;
 
+import digicorp.dto.EmployeeRecordDTO;
 import digicorp.entity.Department;
 import digicorp.entity.Employee;
 import digicorp.services.DepartmentDAO;
@@ -53,7 +54,24 @@ public class EmployeeResource {
         }
     }
 
+    @GET
+    @Path("/by-department/{deptNo}")
+    public Response getEmployeesByDepartment(
+            @PathParam("deptNo") String deptNo,
+            @QueryParam("page") @DefaultValue("1") int page
+    ) {
+        EntityManager em = emf.createEntityManager();
 
+        try {
+            EmployeeDAO dao = new EmployeeDAO(em);
+            List<EmployeeRecordDTO> employees = dao.findByDepartment(deptNo, page);
+
+            return Response.ok(employees).build();
+
+        } finally {
+            em.close();
+        }
+    }
 
 
 }
