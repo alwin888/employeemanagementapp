@@ -1,5 +1,8 @@
 package digicorp.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
@@ -8,22 +11,29 @@ import java.time.LocalDate;
 public class DeptManager {
 
     @EmbeddedId
+    @JsonUnwrapped
     private DeptManagerId id;
 
     @ManyToOne
-    @MapsId("empNo")   // maps PK column emp_no
+    @MapsId("empNo")
     @JoinColumn(name = "emp_no")
+    @JsonBackReference("emp-managers")
     private Employee employee;
 
     @ManyToOne
+    @JsonUnwrapped
     @MapsId("deptNo")  // maps PK column dept_no
     @JoinColumn(name = "dept_no")
     private Department department;
 
     @Column(name = "from_date")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @Temporal(TemporalType.DATE)
     private LocalDate fromDate;
 
     @Column(name = "to_date")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @Temporal(TemporalType.DATE)
     private LocalDate toDate;
 
     public DeptManager() {}

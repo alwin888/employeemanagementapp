@@ -1,11 +1,20 @@
 package digicorp.rest;
 
+import digicorp.entity.Department;
 import digicorp.entity.Employee;
+import digicorp.services.DepartmentDAO;
+import digicorp.services.EmployeeDAO;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Employee endpoints implementing your 4 required operations.
@@ -14,6 +23,37 @@ import java.time.LocalDate;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class EmployeeResource {
+    private static final EntityManagerFactory emf;
+
+    static {
+        // Build EMF once
+        Map<String, String> props = new HashMap<>();
+        props.put("jakarta.persistence.jdbc.url", "jdbc:mariadb://localhost:3306/employees");
+
+        emf = Persistence.createEntityManagerFactory("EmployeeService", props);
+    }
+
+    @GET
+    @Path("/{empNo}")
+    public Response getEmployee(@PathParam("empNo") int empNo) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            EmployeeDAO dao = new EmployeeDAO(em);
+            Employee e = dao.findByIdWithHistory(empNo);
+
+            if (e == null) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("Employee " + empNo + " not found").build();
+            }
+
+            return Response.ok(e).build();
+
+        } finally {
+            em.close();
+        }
+    }
+
+
 
 
 }

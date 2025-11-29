@@ -1,53 +1,44 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd">
+
   <modelVersion>4.0.0</modelVersion>
   <groupId>digicorp</groupId>
   <artifactId>employeemanagement</artifactId>
   <packaging>war</packaging>
   <version>1.0-SNAPSHOT</version>
+
   <name>employeemanagement Maven Webapp</name>
-  <url>http://maven.apache.org</url>
+
   <dependencies>
 
-    <!-- JAX-RS API (Jakarta REST) -->
+    <!-- JAX-RS (Jersey) Core -->
     <dependency>
       <groupId>org.glassfish.jersey.core</groupId>
       <artifactId>jersey-server</artifactId>
       <version>3.1.5</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.mariadb.jdbc</groupId>
-      <artifactId>mariadb-java-client</artifactId>
-      <version>3.3.2</version>
-    </dependency>
-
-    <!-- Jersey servlet integration -->
+    <!-- Jersey servlet integration (Tomcat) -->
     <dependency>
       <groupId>org.glassfish.jersey.containers</groupId>
       <artifactId>jersey-container-servlet</artifactId>
       <version>3.1.5</version>
     </dependency>
 
-    <!-- Jackson JSON Provider for Jersey (VERY IMPORTANT) -->
+    <!-- Jackson integration for Jersey -->
     <dependency>
       <groupId>org.glassfish.jersey.media</groupId>
       <artifactId>jersey-media-json-jackson</artifactId>
       <version>3.1.5</version>
     </dependency>
 
-    <!-- Jersey InjectionManager implementation -->
+    <!-- Jersey HK2 injection ( MUST match version 3.1.5 ) -->
     <dependency>
       <groupId>org.glassfish.jersey.inject</groupId>
       <artifactId>jersey-hk2</artifactId>
-      <version>3.1.1</version>
-    </dependency>
-
-    <!-- Hibernate JPA implementation -->
-    <dependency>
-      <groupId>org.hibernate.orm</groupId>
-      <artifactId>hibernate-core</artifactId>
-      <version>6.4.2.Final</version>
+      <version>3.1.5</version>
     </dependency>
 
     <!-- JPA API -->
@@ -57,14 +48,28 @@
       <version>3.1.0</version>
     </dependency>
 
-    <!-- Jakarta RESTful Web Services API -->
+    <!-- Hibernate JPA provider -->
     <dependency>
-      <groupId>jakarta.ws.rs</groupId>
-      <artifactId>jakarta.ws.rs-api</artifactId>
-      <version>3.1.0</version>
+      <groupId>org.hibernate.orm</groupId>
+      <artifactId>hibernate-core</artifactId>
+      <version>6.4.2.Final</version>
     </dependency>
 
-    <!-- Jackson (JSON Library) -->
+    <!-- MariaDB JDBC driver -->
+    <dependency>
+      <groupId>org.mariadb.jdbc</groupId>
+      <artifactId>mariadb-java-client</artifactId>
+      <version>3.3.2</version>
+    </dependency>
+
+    <!-- Jackson Core (for parsing) -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>2.17.0</version>
+    </dependency>
+
+    <!-- Jackson Databind (serializer/deserializer) -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
@@ -78,16 +83,17 @@
       <version>2.17.0</version>
     </dependency>
 
-    <!-- Jackson for Java 8 dates -->
+    <!-- Support for Java 8 Time: LocalDate, LocalDateTime -->
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-jsr310</artifactId>
       <version>2.17.0</version>
     </dependency>
 
-
   </dependencies>
+
   <build>
     <finalName>employeemanagement</finalName>
   </build>
+
 </project>

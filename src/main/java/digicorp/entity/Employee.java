@@ -1,15 +1,13 @@
 package digicorp.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
-/**
- * Employee entity - contains stable employee info and one-to-many relations
- * to history tables that record changes over time (salary, title, dept membership, manager).
- */
+import java.time.LocalDate;
+import java.util.Date;
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 @Entity
 @Table(name = "employees")
 public class Employee {
@@ -18,7 +16,10 @@ public class Employee {
     @Column(name = "emp_no")
     private int empNo;
 
+
     @Column(name = "birth_date")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @Temporal(TemporalType.DATE)
     private LocalDate birthDate;
 
     @Column(name = "first_name")
@@ -27,27 +28,32 @@ public class Employee {
     @Column(name = "last_name")
     private String lastName;
 
+    @Column(name = "gender")
     private String gender;
 
     @Column(name = "hire_date")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @Temporal(TemporalType.DATE)
     private LocalDate hireDate;
 
-    // Dept membership history (dept_emp)
-    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference // prevents infinite recursion when serializing
-    private List<DeptEmployee> departments = new ArrayList<>();
+    // One employee can have many title records
+    @OneToMany(mappedBy = "employee", fetch = FetchType.EAGER)
+    @JsonManagedReference("emp-titles")
+    private List<TitleHistory> titleHistory;
 
-    // Manager history (dept_manager)
-    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DeptManager> managerHistory = new ArrayList<>();
+    @OneToMany(mappedBy = "employee", fetch = FetchType.EAGER)
+    @JsonManagedReference("emp-salaries")
+    private List<SalaryHistory> salaryHistory;
 
-    // Salary history (salaries)
-    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SalaryHistory> salaryHistory = new ArrayList<>();
+    @OneToMany(mappedBy = "employee", fetch = FetchType.EAGER)
+    @JsonManagedReference("emp-departments")
+    private List<DeptEmployee> departments;
 
-    // Title / position history (titles)
-    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TitleHistory> titleHistory = new ArrayList<>();
+    @OneToMany(mappedBy = "employee", fetch = FetchType.EAGER)
+    @JsonManagedReference("emp-managers")
+    private List<DeptManager> managedDepartments;
+
+    // Getters and setters…
 
     public Employee() {}
 
@@ -77,12 +83,30 @@ public class Employee {
     public List<DeptEmployee> getDepartments() { return departments; }
     public void setDepartments(List<DeptEmployee> departments) { this.departments = departments; }
 
-    public List<DeptManager> getManagerHistory() { return managerHistory; }
-    public void setManagerHistory(List<DeptManager> managerHistory) { this.managerHistory = managerHistory; }
+    public List<DeptManager> getManagedDepartments() { return managedDepartments; }
+    public void setManagerHistory(List<DeptManager> managedDepartments) { this.managedDepartments = managedDepartments; }
 
     public List<SalaryHistory> getSalaryHistory() { return salaryHistory; }
     public void setSalaryHistory(List<SalaryHistory> salaryHistory) { this.salaryHistory = salaryHistory; }
 
     public List<TitleHistory> getTitleHistory() { return titleHistory; }
     public void setTitleHistory(List<TitleHistory> titleHistory) { this.titleHistory = titleHistory; }
+
+    @Override
+    public String toString() {
+        return "Employee{" +
+                "employeeNo='" + empNo + '\'' +
+                ", birthDate='" + birthDate + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", gender='" + gender + '\'' +
+                ", hireDate='" + hireDate + '\'' +
+                ", title='" + titleHistory + '\'' +
+                ", salary='" + salaryHistory + '\'' +
+                ", departments='" + departments + '\'' +
+                ", managers='" + managedDepartments + '\'' +
+                '}';
+    }
+
+
 }

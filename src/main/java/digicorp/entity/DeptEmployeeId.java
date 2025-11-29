@@ -1,9 +1,10 @@
 package digicorp.entity;
 
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.util.Objects;
 
 /**
@@ -13,9 +14,11 @@ import java.util.Objects;
 public class DeptEmployeeId implements Serializable {
 
     @Column(name = "emp_no")
+    @JsonIgnore
     private int empNo;
 
     @Column(name = "dept_no", length = 4)
+    @JsonIgnore
     private String deptNo;
 
     public DeptEmployeeId() {}
