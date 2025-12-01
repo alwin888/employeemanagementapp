@@ -3,6 +3,7 @@ package digicorp.rest;
 
 import digicorp.services.DepartmentDAO;
 import digicorp.entity.Department;
+import digicorp.util.JPAUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
@@ -23,15 +24,9 @@ import java.util.List;
 @Path("/departments")
 @Produces(MediaType.APPLICATION_JSON)
 public class DepartmentResource {
-    private static final EntityManagerFactory emf;
 
-    static {
-        // Build EMF once
-        Map<String, String> props = new HashMap<>();
-        props.put("jakarta.persistence.jdbc.url", "jdbc:mariadb://localhost:3306/employees");
-
-        emf = Persistence.createEntityManagerFactory("EmployeeService", props);
-    }
+    private static final EntityManagerFactory emf =
+            JPAUtil.getEMF();
 
     @GET
     public Response listDepartments() {

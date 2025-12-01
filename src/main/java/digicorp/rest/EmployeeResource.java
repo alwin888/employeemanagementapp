@@ -3,17 +3,14 @@ package digicorp.rest;
 import digicorp.dto.*;
 import digicorp.entity.Employee;
 import digicorp.services.EmployeeDAO;
+import digicorp.util.JPAUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
-import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
 
 /**
  * Employee endpoints implementing your 4 required operations.
@@ -22,15 +19,9 @@ import java.util.Map;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class EmployeeResource {
-    private static final EntityManagerFactory emf;
 
-    static {
-        // Build EMF once
-        Map<String, String> props = new HashMap<>();
-        props.put("jakarta.persistence.jdbc.url", "jdbc:mariadb://localhost:3306/employees");
-
-        emf = Persistence.createEntityManagerFactory("EmployeeService", props);
-    }
+    private static final EntityManagerFactory emf =
+            JPAUtil.getEMF();
 
     @GET
     @Path("/{empNo}")
@@ -76,13 +67,12 @@ public class EmployeeResource {
     //Json format to paste in raw in Postman:
 
 //    {
-//        "empNo": 10002,
-//            "newTitle": "Staff promoted",
-//            "fromDate": "2025-12-01",
-//            "salary" : 100000,
+//        "empNo": 10004,
+//            "newTitle": "Manager",
+//            "fromDate": "2025-12-11",
+//            "salary" : 1000278,
 //            "deptNo" : "d001",
-//            "deptName" : "Marketing",
-//            "isManager" : true
+//            "manager" : true
 //    }
 
     @POST

@@ -1,15 +1,8 @@
 package digicorp;
 
+import digicorp.rest.*;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import digicorp.rest.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-
 import java.util.HashSet;
 import java.util.Set;
 
