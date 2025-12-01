@@ -53,9 +53,9 @@ public class EmployeeResource {
     }
 
     @GET
-    @Path("/by-department/{deptNo}")
+    @Path("/by-department")
     public Response getEmployeesByDepartment(
-            @PathParam("deptNo") String deptNo,
+            @QueryParam("deptNo") String deptNo,
             @QueryParam("page") @DefaultValue("1") int page
     ) {
         EntityManager em = emf.createEntityManager();
