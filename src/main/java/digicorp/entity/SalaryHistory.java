@@ -13,6 +13,10 @@ import java.time.LocalDate;
 @Table(name = "salaries")
 public class SalaryHistory {
 
+
+    @Column(name="salary", precision = 11)
+    private int salary;
+
     @EmbeddedId
     @JsonUnwrapped
     private SalaryHistoryId id;
@@ -22,9 +26,6 @@ public class SalaryHistory {
     @JoinColumn(name = "emp_no")
     @JsonBackReference("emp-salaries")
     private Employee employee;
-
-    private int salary;
-
 
     @Column(name = "to_date")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")

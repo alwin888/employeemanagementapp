@@ -12,7 +12,7 @@ public class DepartmentDAO {
     }
 
     public List<Department> findAll() {
-        TypedQuery<Department> q = em.createQuery("SELECT d FROM Department d", Department.class);
+        TypedQuery<Department> q = em.createQuery("SELECT d FROM Department d ORDER BY d.deptNo", Department.class);
         return q.getResultList();
     }
 
