@@ -1,6 +1,6 @@
 package digicorp.services;
-
 import digicorp.entity.Department;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import java.util.List;

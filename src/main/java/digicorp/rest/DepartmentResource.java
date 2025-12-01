@@ -1,21 +1,15 @@
 package digicorp.rest;
-
-
 import digicorp.services.DepartmentDAO;
 import digicorp.entity.Department;
 import digicorp.util.JPAUtil;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
-
-import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
 
 /**
