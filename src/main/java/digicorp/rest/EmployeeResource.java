@@ -9,7 +9,10 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -25,15 +28,26 @@ public class EmployeeResource {
 
     @GET
     @Path("/{empNo}")
-    public Response getEmployee(@PathParam("empNo") int empNo) {
+    public Response getEmployee(@PathParam("empNo") String empNoStr) {
+
+        // Edge Case 1: validate empNo format
+        if (empNoStr == null || !empNoStr.trim().matches("\\d+")) {
+            Map<String, String> err = new HashMap<>();
+            err.put("error", "Employee number must be a positive integer.");
+            return Response.status(Response.Status.BAD_REQUEST).entity(err).build();
+        }
+
+        int empNo = Integer.parseInt(empNoStr);
+
         EntityManager em = emf.createEntityManager();
         try {
             EmployeeDAO dao = new EmployeeDAO(em);
             Employee e = dao.findByIdWithHistory(empNo);
 
             if (e == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .entity("Employee " + empNo + " not found").build();
+                Map<String, String> err = new HashMap<>();
+                err.put("error", "Employee " + empNo + " not found");
+                return Response.status(Response.Status.NOT_FOUND).entity(err).build();
             }
 
             return Response.ok(e).build();
@@ -49,9 +63,40 @@ public class EmployeeResource {
             @QueryParam("deptNo") String deptNo,
             @QueryParam("page") @DefaultValue("1") int page
     ) {
-        EntityManager em = emf.createEntityManager();
 
+        // Validate deptNo exists
+        if (deptNo == null || deptNo.trim().isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\":\"Query parameter 'deptNo' is required\"}")
+                    .build();
+        }
+
+        deptNo = deptNo.trim();
+
+        // Validate format: d### (anycase d + 3 digits)
+        if (!deptNo.matches("(?i)^d\\d{3}$")) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\":\"Invalid deptNo format. Expected format 'd001', 'd002', ...\"}")
+                    .build();
+        }
+
+        EntityManager em = emf.createEntityManager();
         try {
+            // Verify department exists
+            Long count = em.createQuery(
+                            "SELECT COUNT(d) FROM Department d WHERE d.deptNo = :deptNo",
+                            Long.class
+                    )
+                    .setParameter("deptNo", deptNo)
+                    .getSingleResult();
+
+            if (count == 0) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("{\"error\":\"Department " + deptNo + " not found\"}")
+                        .build();
+            }
+
+            // Fetch paged results
             EmployeeDAO dao = new EmployeeDAO(em);
             List<EmployeeRecordDTO> employees = dao.findByDepartment(deptNo, page);
 

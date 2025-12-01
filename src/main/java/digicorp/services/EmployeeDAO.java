@@ -3,6 +3,7 @@ package digicorp.services;
 import digicorp.dto.*;
 import digicorp.entity.*;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.EntityTransaction;
 import java.time.LocalDate;
@@ -16,22 +17,27 @@ public class EmployeeDAO {
     }
     // Fetch full employee with history using JOIN FETCH
     public Employee findByIdWithHistory(int empNo) {
-        TypedQuery<Employee> q = em.createQuery(
-                "SELECT DISTINCT e FROM Employee e " +
-                        "LEFT JOIN FETCH e.departments de " +
-                        "LEFT JOIN FETCH de.department d " +
-                        "WHERE e.empNo = :empNo",
-                Employee.class
-        );
+        try {
+            TypedQuery<Employee> q = em.createQuery(
+                    "SELECT DISTINCT e FROM Employee e " +
+                            "LEFT JOIN FETCH e.departments de " +
+                            "LEFT JOIN FETCH de.department d " +
+                            "WHERE e.empNo = :empNo",
+                    Employee.class
+            );
 
-        q.setParameter("empNo", empNo);
+            q.setParameter("empNo", empNo);
 
-        Employee e = q.getSingleResult();
+            Employee e = q.getSingleResult();
 
-        // Optional: lazy load manager history if your endpoint needs it
-        e.getManagedDepartments().size();
+            // Optional eager load of manager departments
+            e.getManagedDepartments().size();
 
-        return e;
+            return e;
+
+        } catch (NoResultException ex) {
+            return null;
+        }
     }
 
     public List<EmployeeRecordDTO> findByDepartment(String deptNo, int page) {
