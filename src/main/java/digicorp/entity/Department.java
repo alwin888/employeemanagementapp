@@ -4,23 +4,28 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import java.util.List;
 import jakarta.persistence.*;
 
+
 /**
  * Department entity.
  */
 @Entity
-@Table(name = "departments")
+@Table(name = "departments", schema = "employees")
 public class Department {
 
     @Id
     @Column(name = "dept_no", length = 4)
     private String deptNo;
 
-    @Column(name = "dept_name")
+    @Column(name = "dept_name", length = 40)
     private String deptName;
 
     @OneToMany(mappedBy = "department")
     @JsonBackReference
     private List<DeptEmployee> employees;
+
+    @OneToMany(mappedBy = "department")
+    @JsonBackReference
+    private List<DeptManager> managers;
 
     public Department() {}
 
