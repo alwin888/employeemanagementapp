@@ -15,7 +15,6 @@ public class PromotionRequestDTO {
 
     private int salary;
     private String deptNo;
-    private String deptName;
     @JsonProperty("manager")
     private boolean manager;
 
@@ -35,9 +34,6 @@ public class PromotionRequestDTO {
 
     public String getNewDeptNo() { return deptNo; }
     public void setDeptNo(String deptNo) { this.deptNo = deptNo; }
-
-    public String getNewDeptName() { return deptName; }
-    public void setDeptName(String deptName) { this.deptName = deptName; }
 
     public boolean isManager() { return manager; }
     public void setManager(boolean manager) { this.manager = manager; }
