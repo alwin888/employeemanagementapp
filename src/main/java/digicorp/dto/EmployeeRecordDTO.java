@@ -11,6 +11,7 @@ public class EmployeeRecordDTO {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate hireDate;
 
+
     public EmployeeRecordDTO(int empNo, String firstName, String lastName, LocalDate hireDate) {
         this.empNo = empNo;
         this.firstName = firstName;

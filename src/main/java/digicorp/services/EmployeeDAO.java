@@ -1,9 +1,7 @@
 package digicorp.services;
 
 import digicorp.dto.*;
-import digicorp.entity.Employee;
-import digicorp.entity.TitleHistory;
-import digicorp.entity.TitleHistoryId;
+import digicorp.entity.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.EntityTransaction;
@@ -63,7 +61,7 @@ public class EmployeeDAO {
         try {
             tx.begin();
 
-            // 1. Find the employee
+            // Find the employee
             Employee emp = em.find(Employee.class, dto.getEmpNo());
             if (emp == null) {
                 throw new Exception("Employee not found with empNo: " + dto.getEmpNo());
@@ -71,7 +69,9 @@ public class EmployeeDAO {
 
             LocalDate newFromDate = dto.getFromDate();
 
-            // 2. Find current title(s) for this employee
+            //A. UPDATING TITLES
+
+            // 1. Find current title(s) for this employee
             TypedQuery<TitleHistory> query = em.createQuery(
                     "SELECT t FROM TitleHistory t WHERE t.employee.empNo = :empNo AND t.toDate = :maxDate",
                     TitleHistory.class
@@ -80,13 +80,13 @@ public class EmployeeDAO {
             query.setParameter("maxDate", LocalDate.of(9999, 1, 1));
             List<TitleHistory> currentTitles = query.getResultList();
 
-            // 3. Update previous title(s) to end the day before the new promotion
+            // 2. Update previous title(s) to end the day before the new promotion
             for (TitleHistory t : currentTitles) {
                 t.setToDate(newFromDate.minusDays(1));
                 em.merge(t);
             }
 
-            // 4. Add new title record
+            // 3. Add new title record
             TitleHistoryId newId = new TitleHistoryId(emp.getEmpNo(), dto.getNewTitle(), newFromDate);
             TitleHistory newTitle = new TitleHistory();
             newTitle.setId(newId);
@@ -94,6 +94,117 @@ public class EmployeeDAO {
             newTitle.setToDate(LocalDate.of(9999, 1, 1));
 
             em.persist(newTitle);
+
+
+            //B. UPDATING SALARY
+
+            // 1. Find current salary(s) for this employee
+            TypedQuery<SalaryHistory> salaryquery = em.createQuery(
+                    "SELECT t FROM SalaryHistory t WHERE t.employee.empNo = :empNo AND t.toDate = :maxDate",
+                    SalaryHistory.class
+            );
+            salaryquery.setParameter("empNo", emp.getEmpNo());
+            salaryquery.setParameter("maxDate", LocalDate.of(9999, 1, 1));
+            List<SalaryHistory> currentSalaries = salaryquery.getResultList();
+
+            // 2. Update previous salary(s) to end the day before the new promotion
+            for (SalaryHistory t : currentSalaries) {
+                t.setToDate(newFromDate.minusDays(1));
+                em.merge(t);
+            }
+
+            // 3. Add new salary record
+            SalaryHistoryId newsId = new SalaryHistoryId(emp.getEmpNo(), newFromDate);
+            SalaryHistory newSalary = new SalaryHistory();
+            newSalary.setId(newsId);
+            newSalary.setSalary(dto.getNewSalary());
+            newSalary.setEmployee(emp);
+            newSalary.setToDate(LocalDate.of(9999, 1, 1));
+
+            em.persist(newSalary);
+
+            // === C. UPDATE DEPARTMENT ONLY IF CHANGED ===
+
+            TypedQuery<DeptEmployee> qDept = em.createQuery(
+                    "SELECT d FROM DeptEmployee d WHERE d.employee.empNo = :empNo AND d.toDate = :maxDate",
+                    DeptEmployee.class
+            );
+            qDept.setParameter("empNo", emp.getEmpNo());
+            qDept.setParameter("maxDate", LocalDate.of(9999,1,1));
+
+            List<DeptEmployee> currentDeptAssignments = qDept.getResultList();
+            String oldDeptNo = currentDeptAssignments.isEmpty()
+                    ? null
+                    : currentDeptAssignments.get(0).getDepartment().getDeptNo();
+
+            boolean departmentChanged =
+                    dto.getNewDeptNo() != null &&
+                            !dto.getNewDeptNo().equals(oldDeptNo);
+
+            if (departmentChanged) {
+                // 1. Close old DeptEmployee record
+                for (DeptEmployee d : currentDeptAssignments) {
+                    d.setToDate(newFromDate.minusDays(1));
+                    em.merge(d);
+                }
+
+                // 2. Insert new DeptEmployee record
+                Department newDept = em.find(Department.class, dto.getNewDeptNo());
+                DeptEmployeeId deId =
+                        new DeptEmployeeId(emp.getEmpNo(), dto.getNewDeptNo());
+
+                DeptEmployee newDeptEmp = new DeptEmployee();
+                newDeptEmp.setId(deId);
+                newDeptEmp.setEmployee(emp);
+                newDeptEmp.setDepartment(newDept);
+                newDeptEmp.setFromDate(newFromDate);
+                newDeptEmp.setToDate(LocalDate.of(9999,1,1));
+
+                em.persist(newDeptEmp);
+            }
+
+
+// === D. UPDATE MANAGER ROLE ONLY IF dto.isManager() == true ===
+
+// Only process manager update if promotion includes management role
+            if (dto.isManager()) {
+
+                // Step 1: Find current manager records
+                TypedQuery<DeptManager> qMgr = em.createQuery(
+                        "SELECT m FROM DeptManager m WHERE m.employee.empNo = :empNo AND m.toDate = :maxDate",
+                        DeptManager.class
+                );
+                qMgr.setParameter("empNo", emp.getEmpNo());
+                qMgr.setParameter("maxDate", LocalDate.of(9999,1,1));
+
+                List<DeptManager> currentManagers = qMgr.getResultList();
+
+                // Step 2: Determine if employee is already manager of the NEW dept
+                boolean alreadyManagerOfNewDept = currentManagers.stream()
+                        .anyMatch(m -> m.getDepartment().getDeptNo().equals(dto.getNewDeptNo()));
+
+                if (!alreadyManagerOfNewDept) {
+
+                    // 3. Close old manager records (if manager of another department)
+                    for (DeptManager m : currentManagers) {
+                        m.setToDate(newFromDate.minusDays(1));
+                        em.merge(m);
+                    }
+
+                    // 4. Add new manager assignment
+                    DeptManagerId mgrId =
+                            new DeptManagerId(emp.getEmpNo(), dto.getNewDeptNo());
+
+                    DeptManager newManager = new DeptManager();
+                    newManager.setId(mgrId);
+                    newManager.setEmployee(emp);
+                    newManager.setFromDate(newFromDate);
+                    newManager.setDepartment(em.find(Department.class, dto.getNewDeptNo()));
+                    newManager.setToDate(LocalDate.of(9999,1,1));
+
+                    em.persist(newManager);
+                }
+            }
 
             tx.commit();
         } catch (Exception e) {

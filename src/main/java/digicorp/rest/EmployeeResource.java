@@ -78,7 +78,11 @@ public class EmployeeResource {
 //    {
 //        "empNo": 10002,
 //            "newTitle": "Staff promoted",
-//            "fromDate": "2025-12-01"
+//            "fromDate": "2025-12-01",
+//            "salary" : 100000,
+//            "deptNo" : "d001",
+//            "deptName" : "Marketing",
+//            "isManager" : true
 //    }
 
     @POST

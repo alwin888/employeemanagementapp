@@ -21,6 +21,7 @@ public class SalaryHistoryId implements Serializable {
     @JsonIgnore
     private int empNo;
 
+
     @Column(name = "from_date")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @Temporal(TemporalType.DATE)

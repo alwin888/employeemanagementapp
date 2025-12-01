@@ -1,6 +1,8 @@
 package digicorp.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.LocalDate;
 
 public class PromotionRequestDTO {
@@ -10,6 +12,12 @@ public class PromotionRequestDTO {
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate fromDate;
+
+    private int salary;
+    private String deptNo;
+    private String deptName;
+    @JsonProperty("manager")
+    private boolean manager;
 
     public PromotionRequestDTO() {}
 
@@ -21,4 +29,18 @@ public class PromotionRequestDTO {
 
     public LocalDate getFromDate() { return fromDate; }
     public void setFromDate(LocalDate fromDate) { this.fromDate = fromDate; }
+
+    public int getNewSalary() { return salary; }
+    public void setSalary(int salary) { this.salary = salary; }
+
+    public String getNewDeptNo() { return deptNo; }
+    public void setDeptNo(String deptNo) { this.deptNo = deptNo; }
+
+    public String getNewDeptName() { return deptName; }
+    public void setDeptName(String deptName) { this.deptName = deptName; }
+
+    public boolean isManager() { return manager; }
+    public void setManager(boolean manager) { this.manager = manager; }
+
+
 }
