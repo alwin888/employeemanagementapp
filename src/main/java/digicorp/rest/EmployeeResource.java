@@ -30,13 +30,13 @@ public class EmployeeResource {
     public Response getEmployee(@PathParam("empNo") String empNoStr) {
 
         // Edge Case 1: validate empNo format
-        if (empNoStr == null || !empNoStr.trim().matches("\\d+")) {
+        if (empNoStr == null || !empNoStr.matches("\\d+")) {
             Map<String, String> err = new HashMap<>();
             err.put("error", "Employee number must be a positive integer.");
             return Response.status(Response.Status.BAD_REQUEST).entity(err).build();
         }
 
-        int empNo = Integer.parseInt(empNoStr.trim());
+        int empNo = Integer.parseInt(empNoStr);
 
         EntityManager em = emf.createEntityManager();
         try {
