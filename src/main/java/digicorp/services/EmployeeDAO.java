@@ -11,9 +11,11 @@ import java.util.List;
 
 public class EmployeeDAO {
     protected EntityManager em;
+
     public EmployeeDAO(EntityManager em) {
         this.em = em;
     }
+
     // Fetch full employee with history using JOIN FETCH
     public Employee findByIdWithHistory(int empNo) {
         try {
@@ -66,76 +68,183 @@ public class EmployeeDAO {
         try {
             tx.begin();
 
-            // Find the employee
-            Employee emp = em.find(Employee.class, dto.getEmpNo());
-            if (emp == null) {
-                throw new Exception("Employee not found with empNo: " + dto.getEmpNo());
+            // ======================================================
+            // BASIC VALIDATION
+            // ======================================================
+
+            if (dto == null) {
+                throw new Exception("{\"error\":\"Request body is missing or invalid JSON\"}");
+            }
+
+            if (dto.getEmpNo() <= 0) {
+                throw new Exception("{\"error\":\"empNo must be a positive integer\"}");
+            }
+
+            if (dto.getNewTitle() == null || dto.getNewTitle().trim().isEmpty()) {
+                throw new Exception("{\"error\":\"newTitle cannot be blank\"}");
+            }
+
+            if (dto.getFromDate() == null) {
+                throw new Exception("{\"error\":\"fromDate is required (yyyy-MM-dd)\"}");
             }
 
             LocalDate newFromDate = dto.getFromDate();
 
-            //A. UPDATING TITLES
+            // SALARY VALIDATION
+            if (dto.getNewSalary() <= 0) {
+                throw new Exception("{\"error\":\"salary must be greater than 0\"}");
+            }
 
-            // 1. Find current title(s) for this employee
+            // DEPT VALIDATION ("d001" format, case insensitive)
+            if (dto.getNewDeptNo() == null ||
+                    !dto.getNewDeptNo().trim().matches("^[dD][0-9]{3}$")) {
+                throw new Exception("{\"error\":\"deptNo must match pattern dXXX (e.g., d001, D005)\"}");
+            }
+
+            // Normalize to lowercase for DB consistency
+            String deptNoNormalized = dto.getNewDeptNo().trim().toLowerCase();
+
+
+            // ======================================================
+            // LOAD EMPLOYEE
+            // ======================================================
+            Employee emp = em.find(Employee.class, dto.getEmpNo());
+            if (emp == null) {
+                throw new Exception("{\"error\":\"Employee not found with empNo: " + dto.getEmpNo() + "\"}");
+            }
+
+
+            // ======================================================
+            // VALIDATE AGAINST EXISTING HISTORY DATES
+            // ======================================================
+
+            // --- SALARY HISTORY ---
+            TypedQuery<SalaryHistory> latestSalaryQ = em.createQuery(
+                    "SELECT s FROM SalaryHistory s WHERE s.employee.empNo = :empNo ORDER BY s.id.fromDate DESC",
+                    SalaryHistory.class
+            );
+            latestSalaryQ.setParameter("empNo", emp.getEmpNo());
+            latestSalaryQ.setMaxResults(1);
+
+            SalaryHistory lastSalary = latestSalaryQ.getResultList().isEmpty()
+                    ? null
+                    : latestSalaryQ.getResultList().get(0);
+
+            if (lastSalary != null && !newFromDate.isAfter(lastSalary.getId().getFromDate())) {
+                throw new Exception(
+                        "{\"error\":\"fromDate must be AFTER last salary change date: "
+                                + lastSalary.getId().getFromDate() + "\"}"
+                );
+            }
+
+
+            // --- TITLE HISTORY ---
+            TypedQuery<TitleHistory> latestTitleQ = em.createQuery(
+                    "SELECT t FROM TitleHistory t WHERE t.employee.empNo = :empNo ORDER BY t.id.fromDate DESC",
+                    TitleHistory.class
+            );
+            latestTitleQ.setParameter("empNo", emp.getEmpNo());
+            latestTitleQ.setMaxResults(1);
+
+            TitleHistory lastTitle = latestTitleQ.getResultList().isEmpty()
+                    ? null
+                    : latestTitleQ.getResultList().get(0);
+
+            if (lastTitle != null && !newFromDate.isAfter(lastTitle.getId().getFromDate())) {
+                throw new Exception(
+                        "{\"error\":\"fromDate must be AFTER last title change date: "
+                                + lastTitle.getId().getFromDate() + "\"}"
+                );
+            }
+
+
+            // --- DEPARTMENT HISTORY ---
+            TypedQuery<DeptEmployee> latestDeptQ = em.createQuery(
+                    "SELECT d FROM DeptEmployee d WHERE d.employee.empNo = :empNo ORDER BY d.fromDate DESC",
+                    DeptEmployee.class
+            );
+            latestDeptQ.setParameter("empNo", emp.getEmpNo());
+            latestDeptQ.setMaxResults(1);
+
+            DeptEmployee lastDept = latestDeptQ.getResultList().isEmpty()
+                    ? null
+                    : latestDeptQ.getResultList().get(0);
+
+            if (lastDept != null && !newFromDate.isAfter(lastDept.getFromDate())) {
+                throw new Exception(
+                        "{\"error\":\"fromDate must be AFTER last department change date: "
+                                + lastDept.getFromDate() + "\"}"
+                );
+            }
+
+
+
+            // ======================================================
+            // A. UPDATE TITLE HISTORY
+            // ======================================================
             TypedQuery<TitleHistory> query = em.createQuery(
                     "SELECT t FROM TitleHistory t WHERE t.employee.empNo = :empNo AND t.toDate = :maxDate",
                     TitleHistory.class
             );
             query.setParameter("empNo", emp.getEmpNo());
             query.setParameter("maxDate", LocalDate.of(9999, 1, 1));
+
             List<TitleHistory> currentTitles = query.getResultList();
 
-            // 2. Update previous title(s) to end the day before the new promotion
             for (TitleHistory t : currentTitles) {
                 t.setToDate(newFromDate.minusDays(1));
                 em.merge(t);
             }
 
-            // 3. Add new title record
-            TitleHistoryId newId = new TitleHistoryId(emp.getEmpNo(), dto.getNewTitle(), newFromDate);
+            TitleHistoryId newTitleId =
+                    new TitleHistoryId(emp.getEmpNo(), dto.getNewTitle(), newFromDate);
+
             TitleHistory newTitle = new TitleHistory();
-            newTitle.setId(newId);
+            newTitle.setId(newTitleId);
             newTitle.setEmployee(emp);
             newTitle.setToDate(LocalDate.of(9999, 1, 1));
 
             em.persist(newTitle);
 
 
-            //B. UPDATING SALARY
-
-            // 1. Find current salary(s) for this employee
-            TypedQuery<SalaryHistory> salaryquery = em.createQuery(
-                    "SELECT t FROM SalaryHistory t WHERE t.employee.empNo = :empNo AND t.toDate = :maxDate",
+            // ======================================================
+            // B. UPDATE SALARY HISTORY
+            // ======================================================
+            TypedQuery<SalaryHistory> salaryQuery = em.createQuery(
+                    "SELECT s FROM SalaryHistory s WHERE s.employee.empNo = :empNo AND s.toDate = :maxDate",
                     SalaryHistory.class
             );
-            salaryquery.setParameter("empNo", emp.getEmpNo());
-            salaryquery.setParameter("maxDate", LocalDate.of(9999, 1, 1));
-            List<SalaryHistory> currentSalaries = salaryquery.getResultList();
+            salaryQuery.setParameter("empNo", emp.getEmpNo());
+            salaryQuery.setParameter("maxDate", LocalDate.of(9999, 1, 1));
 
-            // 2. Update previous salary(s) to end the day before the new promotion
-            for (SalaryHistory t : currentSalaries) {
-                t.setToDate(newFromDate.minusDays(1));
-                em.merge(t);
+            List<SalaryHistory> currentSalaries = salaryQuery.getResultList();
+
+            for (SalaryHistory s : currentSalaries) {
+                s.setToDate(newFromDate.minusDays(1));
+                em.merge(s);
             }
 
-            // 3. Add new salary record
-            SalaryHistoryId newsId = new SalaryHistoryId(emp.getEmpNo(), newFromDate);
+            SalaryHistoryId newSalaryId =
+                    new SalaryHistoryId(emp.getEmpNo(), newFromDate);
+
             SalaryHistory newSalary = new SalaryHistory();
-            newSalary.setId(newsId);
+            newSalary.setId(newSalaryId);
             newSalary.setSalary(dto.getNewSalary());
             newSalary.setEmployee(emp);
             newSalary.setToDate(LocalDate.of(9999, 1, 1));
 
             em.persist(newSalary);
 
-            // C. UPDATE DEPARTMENT ONLY IF CHANGED
 
+            // ======================================================
+            // C. UPDATE DEPARTMENT ASSIGNMENT (ONLY IF CHANGED)
+            // ======================================================
             TypedQuery<DeptEmployee> qDept = em.createQuery(
                     "SELECT d FROM DeptEmployee d WHERE d.employee.empNo = :empNo AND d.toDate = :maxDate",
                     DeptEmployee.class
             );
             qDept.setParameter("empNo", emp.getEmpNo());
-            qDept.setParameter("maxDate", LocalDate.of(9999,1,1));
+            qDept.setParameter("maxDate", LocalDate.of(9999, 1, 1));
 
             List<DeptEmployee> currentDeptAssignments = qDept.getResultList();
             String oldDeptNo = currentDeptAssignments.isEmpty()
@@ -143,79 +252,78 @@ public class EmployeeDAO {
                     : currentDeptAssignments.get(0).getDepartment().getDeptNo();
 
             boolean departmentChanged =
-                    dto.getNewDeptNo() != null &&
-                            !dto.getNewDeptNo().equals(oldDeptNo);
+                    !deptNoNormalized.equalsIgnoreCase(oldDeptNo);
 
             if (departmentChanged) {
-                // 1. Close old DeptEmployee record
                 for (DeptEmployee d : currentDeptAssignments) {
                     d.setToDate(newFromDate.minusDays(1));
                     em.merge(d);
                 }
 
-                // 2. Insert new DeptEmployee record
-                Department newDept = em.find(Department.class, dto.getNewDeptNo());
-                DeptEmployeeId deId =
-                        new DeptEmployeeId(emp.getEmpNo(), dto.getNewDeptNo());
+                Department newDept = em.find(Department.class, deptNoNormalized);
+
+                DeptEmployeeId newDeptId =
+                        new DeptEmployeeId(emp.getEmpNo(), deptNoNormalized);
 
                 DeptEmployee newDeptEmp = new DeptEmployee();
-                newDeptEmp.setId(deId);
+                newDeptEmp.setId(newDeptId);
                 newDeptEmp.setEmployee(emp);
                 newDeptEmp.setDepartment(newDept);
                 newDeptEmp.setFromDate(newFromDate);
-                newDeptEmp.setToDate(LocalDate.of(9999,1,1));
+                newDeptEmp.setToDate(LocalDate.of(9999, 1, 1));
 
                 em.persist(newDeptEmp);
             }
 
 
-            // D. UPDATE MANAGER ROLE ONLY IF dto.isManager() == true ===
-
-            // Only process manager update if promotion includes management role
+            // ======================================================
+            // D. MANAGER PROMOTION LOGIC
+            // ======================================================
             if (dto.isManager()) {
 
-                // Step 1: Find current manager records
                 TypedQuery<DeptManager> qMgr = em.createQuery(
                         "SELECT m FROM DeptManager m WHERE m.employee.empNo = :empNo AND m.toDate = :maxDate",
                         DeptManager.class
                 );
                 qMgr.setParameter("empNo", emp.getEmpNo());
-                qMgr.setParameter("maxDate", LocalDate.of(9999,1,1));
+                qMgr.setParameter("maxDate", LocalDate.of(9999, 1, 1));
 
                 List<DeptManager> currentManagers = qMgr.getResultList();
 
-                // Step 2: Determine if employee is already manager of the NEW dept
-                boolean alreadyManagerOfNewDept = currentManagers.stream()
-                        .anyMatch(m -> m.getDepartment().getDeptNo().equals(dto.getNewDeptNo()));
+                boolean alreadyManagerOfDept =
+                        currentManagers.stream()
+                                .anyMatch(m -> m.getDepartment().getDeptNo().equalsIgnoreCase(deptNoNormalized));
 
-                if (!alreadyManagerOfNewDept) {
+                if (!alreadyManagerOfDept) {
 
-                    // 3. Close old manager records (if manager of another department)
                     for (DeptManager m : currentManagers) {
                         m.setToDate(newFromDate.minusDays(1));
                         em.merge(m);
                     }
 
-                    // 4. Add new manager assignment
                     DeptManagerId mgrId =
-                            new DeptManagerId(emp.getEmpNo(), dto.getNewDeptNo());
+                            new DeptManagerId(emp.getEmpNo(), deptNoNormalized);
 
-                    DeptManager newManager = new DeptManager();
-                    newManager.setId(mgrId);
-                    newManager.setEmployee(emp);
-                    newManager.setFromDate(newFromDate);
-                    newManager.setDepartment(em.find(Department.class, dto.getNewDeptNo()));
-                    newManager.setToDate(LocalDate.of(9999,1,1));
+                    DeptManager newMgr = new DeptManager();
+                    newMgr.setId(mgrId);
+                    newMgr.setEmployee(emp);
+                    newMgr.setFromDate(newFromDate);
+                    newMgr.setDepartment(em.find(Department.class, deptNoNormalized));
+                    newMgr.setToDate(LocalDate.of(9999, 1, 1));
 
-                    em.persist(newManager);
+                    em.persist(newMgr);
                 }
             }
 
+
+            // ======================================================
+            // COMMIT
+            // ======================================================
             tx.commit();
+
         } catch (Exception e) {
             if (tx.isActive()) tx.rollback();
-            throw e;
+            throw e;   // Controller catches and returns JSON error properly
         }
     }
-
 }
