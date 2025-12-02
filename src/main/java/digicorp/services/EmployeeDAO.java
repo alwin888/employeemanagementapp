@@ -128,7 +128,7 @@ public class EmployeeDAO {
 
             em.persist(newSalary);
 
-            // === C. UPDATE DEPARTMENT ONLY IF CHANGED ===
+            // C. UPDATE DEPARTMENT ONLY IF CHANGED
 
             TypedQuery<DeptEmployee> qDept = em.createQuery(
                     "SELECT d FROM DeptEmployee d WHERE d.employee.empNo = :empNo AND d.toDate = :maxDate",
@@ -169,9 +169,9 @@ public class EmployeeDAO {
             }
 
 
-// === D. UPDATE MANAGER ROLE ONLY IF dto.isManager() == true ===
+            // D. UPDATE MANAGER ROLE ONLY IF dto.isManager() == true ===
 
-// Only process manager update if promotion includes management role
+            // Only process manager update if promotion includes management role
             if (dto.isManager()) {
 
                 // Step 1: Find current manager records
