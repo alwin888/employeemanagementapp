@@ -36,7 +36,7 @@ public class EmployeeResource {
             return Response.status(Response.Status.BAD_REQUEST).entity(err).build();
         }
 
-        int empNo = Integer.parseInt(empNoStr);
+        int empNo = Integer.parseInt(empNoStr.trim());
 
         EntityManager em = emf.createEntityManager();
         try {
