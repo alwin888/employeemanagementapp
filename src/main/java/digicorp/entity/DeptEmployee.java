@@ -43,7 +43,7 @@ public class DeptEmployee {
     private Department department;
 
     /**
-     * Start date of the department assignment
+     * Start date of when the employee is assigned to the department
      */
     @Column(name = "from_date")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
@@ -51,7 +51,7 @@ public class DeptEmployee {
     private LocalDate fromDate;
 
     /**
-     * end date of the department assignment, 9999-01-01 means ongoing
+     * end date of the employee's assignment to the department, 9999-01-01 means ongoing
      */
     @Column(name = "to_date")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
@@ -64,7 +64,7 @@ public class DeptEmployee {
     public DeptEmployee() {}
     
     /**
-     * constructor with params to create a new Department employee record
+     * constructor with params to create a new department employee record
      * @param id composite key with employee number, department number
      * @param employee the assigned employee
      * @param department the assigned department
