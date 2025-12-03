@@ -90,7 +90,7 @@ public class Department {
     public List<DeptEmployee> getEmployees() { return employees; }
     /**
      * sets a list of employees to a department
-     * @param a list of employees
+     * @param employees a list of employees
     */
     public void setEmployees(List<DeptEmployee> employees) { this.employees = employees; }
     
