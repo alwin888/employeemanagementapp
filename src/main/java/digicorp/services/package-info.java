@@ -15,7 +15,7 @@
  *     <li>Validating business rules and entity relationships before persisting changes</li>
  * </ul>
  *
- * <p>Classes in this package should be used by REST resources or other service layers
+ * <p>Classes in this p`ackage should be used by REST resources or other service layers
  * to keep the persistence logic isolated and maintain a clean separation of concerns.</p>
  */
 package digicorp.services;
