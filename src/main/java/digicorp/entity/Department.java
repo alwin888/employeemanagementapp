@@ -79,7 +79,7 @@ public class Department {
     public String getDeptName() { return deptName; }
     /**
      * Sets department name.
-     * @param deptNo the department name to set
+     * @param deptName the department name to set
     */
     public void setDeptName(String deptName) { this.deptName = deptName; }
 

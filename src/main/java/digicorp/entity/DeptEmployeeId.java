@@ -59,7 +59,7 @@ public class DeptEmployeeId implements Serializable {
     public String getDeptNo() { return deptNo; }
     /**
      * Sets department number
-     * @param septNo the department number to set
+     * @param deptNo the department number to set
      */
     public void setDeptNo(String deptNo) { this.deptNo = deptNo; }
 

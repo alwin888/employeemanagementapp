@@ -209,7 +209,7 @@ public class Employee {
     public List<TitleHistory> getTitleHistory() { return titleHistory; }
     /**
      * sets a list of employee's titles 
-     * @param salaryHistory a list of employee's titles
+     * @param titleHistory a list of employee's titles
     */
     public void setTitleHistory(List<TitleHistory> titleHistory) { this.titleHistory = titleHistory; }
 
