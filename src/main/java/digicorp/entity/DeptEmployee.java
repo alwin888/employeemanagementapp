@@ -10,7 +10,7 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 /**
- * Department entity that represents the department table and it's relationship to others
+ * Department employee entity that represents the deptEmp table and it's relationship to others
  */
 @Entity
 @Table(name = "dept_emp")
