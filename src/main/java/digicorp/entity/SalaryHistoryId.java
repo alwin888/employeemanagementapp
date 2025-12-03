@@ -28,7 +28,7 @@ public class SalaryHistoryId implements Serializable {
     private int empNo;
 
     /**
-     * fromDate
+     * when the slary started
      */
     @Column(name = "from_date")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
@@ -58,13 +58,13 @@ public class SalaryHistoryId implements Serializable {
     public void setEmpNo(int empNo) { this.empNo = empNo; }
 
     /**
-     * Returns from date
-     * @return from date as a LocalDate
+     * Returns the salary from date
+     * @return the salary from date as a LocalDate
      */
     public LocalDate getFromDate() { return fromDate; }
     /**
-     * Sets from date
-     * @param fromDate the from date to set
+     * Sets the salary from date
+     * @param fromDate the the salary from date to set
      */
     public void setFromDate(LocalDate fromDate) { this.fromDate = fromDate; }
 
