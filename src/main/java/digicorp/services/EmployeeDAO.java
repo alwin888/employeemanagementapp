@@ -9,14 +9,35 @@ import jakarta.persistence.EntityTransaction;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Data Access Object (DAO) for {@link Employee} and related entities.
+ * <p>
+ * This class provides methods for querying employee data, fetching employee history,
+ * filtering employees by department, and performing promotions including salary,
+ * title, department assignment, and managerial status updates.
+ * <p>
+ * All database operations are performed using a provided {@link EntityManager}.
+ */
 public class EmployeeDAO {
+    /** The {@link EntityManager} used to perform JPA operations. */
     protected EntityManager em;
-
+    /**
+     * Constructs a new {@code EmployeeDAO} with the given {@link EntityManager}.
+     *
+     * @param em the EntityManager used for all persistence operations
+     */
     public EmployeeDAO(EntityManager em) {
         this.em = em;
     }
 
-    // Fetch full employee with history using JOIN FETCH
+    /**
+     * Retrieves a full {@link Employee} entity with related history eagerly loaded.
+     * <p>
+     * This includes associated department assignments and managed departments.
+     *
+     * @param empNo the employee number
+     * @return the employee with history, or {@code null} if no employee exists
+     */
     public Employee findByIdWithHistory(int empNo) {
         try {
             TypedQuery<Employee> q = em.createQuery(
@@ -31,7 +52,7 @@ public class EmployeeDAO {
 
             Employee e = q.getSingleResult();
 
-            // Optional eager load of manager departments
+            // eager load of manager departments
             e.getManagedDepartments().size();
 
             return e;
@@ -40,7 +61,16 @@ public class EmployeeDAO {
             return null;
         }
     }
-
+    /**
+     * Retrieves a paginated list of employees for a specific department.
+     * <p>
+     * Each employee is mapped to {@link EmployeeRecordDTO}, which includes
+     * basic information such as employee number, first name, last name, and hire date.
+     *
+     * @param deptNo the department number (e.g., "d001")
+     * @param page the page number for pagination (1-based)
+     * @return a list of {@link EmployeeRecordDTO} for the specified department
+     */
     public List<EmployeeRecordDTO> findByDepartment(String deptNo, int page) {
         int pageSize = 20;
         int offset = (page - 1) * pageSize;
@@ -62,15 +92,28 @@ public class EmployeeDAO {
         return query.getResultList();
     }
 
-
+    /**
+     * Promotes an employee by updating their title, salary, department assignment,
+     * and/or managerial status based on the provided {@link PromotionRequestDTO}.
+     * <p>
+     * The method performs:
+     * <ul>
+     *     <li>Validation of the request DTO</li>
+     *     <li>Validation of salary, title, department, and effective date rules</li>
+     *     <li>Updating of {@link TitleHistory}, {@link SalaryHistory}, {@link DeptEmployee},
+     *         and {@link DeptManager} entities</li>
+     *     <li>Committing all changes in a single transaction</li>
+     * </ul>
+     *
+     * @param dto the promotion request data
+     * @throws Exception if validation fails or any update cannot be applied
+     */
     public void promoteEmployee(PromotionRequestDTO dto) throws Exception {
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
 
-            // ======================================================
-            // BASIC VALIDATION
-            // ======================================================
+            // Validation of request DTO
 
             if (dto == null) {
                 throw new Exception("{\"error\":\"Request body is missing or invalid JSON\"}");
@@ -95,7 +138,7 @@ public class EmployeeDAO {
                 throw new Exception("{\"error\":\"salary must be greater than 0\"}");
             }
 
-            // DEPT VALIDATION ("d001" format, case insensitive)
+            // DEPT VALIDATION ("d001" format)
             if (dto.getNewDeptNo() == null ||
                     !dto.getNewDeptNo().trim().matches("^[dD][0-9]{3}$")) {
                 throw new Exception("{\"error\":\"deptNo must match pattern dXXX (e.g., d001, D005)\"}");
@@ -114,9 +157,9 @@ public class EmployeeDAO {
             }
 
 
-            // ======================================================
-            // VALIDATE AGAINST EXISTING HISTORY DATES
-            // ======================================================
+            // ===========================================================
+            // VALIDATE AGAINST EXISTING DATES (SALARY, TITLE, DEPARTMENT)
+            // ===========================================================
 
             // --- SALARY HISTORY ---
             TypedQuery<SalaryHistory> latestSalaryQ = em.createQuery(
@@ -177,7 +220,7 @@ public class EmployeeDAO {
                 );
             }
 
-
+            //Creating new records
 
             // ======================================================
             // A. UPDATE TITLE HISTORY
@@ -314,16 +357,12 @@ public class EmployeeDAO {
                     em.persist(newMgr);
                 }
             }
-
-
-            // ======================================================
             // COMMIT
-            // ======================================================
             tx.commit();
 
         } catch (Exception e) {
             if (tx.isActive()) tx.rollback();
-            throw e;   // Controller catches and returns JSON error properly
+            throw e;   // REST class catches and returns JSON error properly
         }
     }
 }
